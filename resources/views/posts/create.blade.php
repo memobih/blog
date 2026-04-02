@@ -1,24 +1,62 @@
-<head>
-    <title>Posts</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<div class="container mt-5">
-    <h2 class="mb-4"> Add New Post</h2>
+@extends('layouts.app')
 
-    <form method="POST" action="/posts">
-        @csrf
+@section('content')
 
-        <div class="mb-3">
-            <label>Title</label>
-            <input type="text" name="title" class="form-control">
-        </div>
+<h1 class="text-2xl font-bold mb-6">Create Post</h1>
 
-        <div class="mb-3">
-            <label>Content</label>
-            <textarea name="content" class="form-control"></textarea>
-        </div>
+<form method="POST" action="{{ route('posts.store') }}"
+      class="bg-white p-6 rounded-xl shadow space-y-4">
 
-        <button class="btn btn-success">Save</button>
-        <a href="/posts" class="btn btn-secondary">Back</a>
-    </form>
+@csrf
+
+{{-- TITLE --}}
+<div>
+    <input type="text" name="title"
+           value="{{ old('title') }}"
+           placeholder="Title"
+           class="w-full border p-2 rounded @error('title') border-red-500 @enderror">
+
+    @error('title')
+        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+    @enderror
 </div>
+
+{{-- DESCRIPTION --}}
+<div>
+    <textarea name="description"
+              placeholder="Description"
+              class="w-full border p-2 rounded @error('description') border-red-500 @enderror">{{ old('description') }}</textarea>
+
+    @error('description')
+        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+    @enderror
+</div>
+
+{{-- USER --}}
+<div>
+    <select name="user_id"
+            class="w-full border p-2 rounded @error('user_id') border-red-500 @enderror">
+
+        <option value="">Select User</option>
+
+        @foreach($users as $user)
+            <option value="{{ $user->id }}"
+                {{ old('user_id') == $user->id ? 'selected' : '' }}>
+                {{ $user->name }}
+            </option>
+        @endforeach
+
+    </select>
+
+    @error('user_id')
+        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+    @enderror
+</div>
+
+<button class="bg-indigo-600 text-white px-4 py-2 rounded">
+    Save
+</button>
+
+</form>
+
+@endsection
