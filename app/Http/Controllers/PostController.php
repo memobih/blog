@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Post;
+use App\Models\User;
+use Illuminate\Http\Request;
+use App\Http\Requests\StorePostRequest;
+use App\Http\Requests\UpdatePostRequest;
 
 class PostController extends Controller
 {
@@ -12,9 +15,12 @@ class PostController extends Controller
      */
     public function index()
     {
-        
-    $posts = Post::all();
-    return view('posts.index', compact('posts'));
+        $posts = Post::with('user')
+            ->withTrashed()
+            ->latest()
+            ->paginate(10);
+
+        return view('posts.index', compact('posts'));
     }
 
     /**
@@ -22,52 +28,77 @@ class PostController extends Controller
      */
     public function create()
     {
-         return view('posts.create');
+        $users = User::all();
+
+        return view('posts.create', compact('users'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StorePostRequest $request)
     {
-     Post::create($request->all());
-    return redirect('/posts');
+        Post::create($request->validated());
+
+        return redirect()
+            ->route('posts.index')
+            ->with('success', 'Post created successfully');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Post $post)
     {
-         $post = Post::findOrFail($id);
-    return view('posts.show', compact('post'));
+        $post->load(['user', 'comments.user']);
+
+        return view('posts.show', compact('post'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Post $post)
     {
-          $post = Post::findOrFail($id);
-    return view('posts.edit', compact('post'));
+        $users = User::all();
+
+        return view('posts.edit', compact('post', 'users'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdatePostRequest $request, Post $post)
     {
-          $post = Post::findOrFail($id);
-    $post->update($request->all());
-    return redirect('/posts');
+        $post->update($request->validated());
+
+        return redirect()
+            ->route('posts.index')
+            ->with('success', 'Post updated successfully');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified resource from storage (Soft Delete).
      */
-    public function destroy(string $id)
+    public function destroy(Post $post)
     {
-         Post::findOrFail($id)->delete();
-    return redirect('/posts');
+        $post->delete();
+
+        return redirect()
+            ->route('posts.index')
+            ->with('success', 'Post deleted successfully');
+    }
+
+    /**
+     * Restore soft deleted post
+     */
+    public function restore($id)
+    {
+        $post = Post::withTrashed()->findOrFail($id);
+        $post->restore();
+
+        return redirect()
+            ->route('posts.index')
+            ->with('success', 'Post restored successfully');
     }
 }

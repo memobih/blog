@@ -12,7 +12,7 @@ class StorePostRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -20,10 +20,12 @@ class StorePostRequest extends FormRequest
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
-    public function rules(): array
-    {
-        return [
-            //
-        ];
-    }
+   public function rules()
+{
+    return [
+        'title' => 'required|min:3|unique:posts,title',
+        'description' => 'required|min:10',
+        'user_id' => 'required|exists:users,id',
+    ];
+}
 }
